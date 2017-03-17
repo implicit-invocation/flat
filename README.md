@@ -13,7 +13,7 @@ simple IoC for node.js
 You can declare a plugin by creating a plugin description file.
 Plugin description file can be a JSON file or a node module that exports a literal object.
 
-A plugin can have multiple services and can export some of those services for other plugins' services can import as dependencies.
+A plugin can have multiple services and can export some of those services for other plugins' services to import as dependencies.
 
 You can declare a service by providing a factory function or the path to a node module that exports a factory function.
 
