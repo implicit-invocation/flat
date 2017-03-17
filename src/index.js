@@ -41,16 +41,16 @@ const loadService = async(root, path, serviceName, service) => {
         if (pendingDependencies[requirement]) {
           requirementPromises.push(pendingDependencies[requirement].promise);
         } else {
-          logger.error(`Unmet dependency: ${serviceName} requires ${requirement} but ${requirement} cannot be found by the container.`);
+          logger.error('Service Loader', `\tUnmet dependency: "${serviceName}" requires ${requirement} but ${requirement} cannot be found by the container.`);
           return;
         }
       }
     }
   }
 
-
-
   const requirements = await Promise.all(requirementPromises);
+
+  logger.info('Service Loader', `\tRequirements for service "${serviceName}" resolved.`);
 
   let result = service.func.apply({}, requirements);
 
@@ -60,7 +60,7 @@ const loadService = async(root, path, serviceName, service) => {
 
   if (pendingDependencies[serviceName]) {
     pendingDependencies[serviceName].resolve(result);
-    logger.info(`Service ${serviceName} resolved as a dependency.`)
+    logger.info('Service Loader', `\tService "${serviceName}" resolved as a dependency.`);
   }
 }
 
@@ -72,17 +72,16 @@ export const load = (root, configFilePath) => {
   pluginPaths.map(path => {
     const pluginConfig = root.require(path);
     pluginConfigs[path] = pluginConfig;
-    logger.info(`Loading module ${pluginConfig.name} at path ${path}`);
+    logger.info(pluginConfig.name, `\tLoading module ${pluginConfig.name} at path ${path}`);
   });
 
   for (let path in pluginConfigs) {
     const pluginConfig = pluginConfigs[path];
 
-    logger.info(`Exporting services from module ${pluginConfig.name}`);
 
     if (Array.isArray(pluginConfig.exports)) {
+      logger.info(pluginConfig.name, `\tExporting services from module ${pluginConfig.name}: ${pluginConfig.exports.join(', ')}`);
       addPendingDependencies(pluginConfig.exports);
-      logger.info(`\t${pluginConfig.exports.join(', ')}`);
     }
   };
 
@@ -90,9 +89,9 @@ export const load = (root, configFilePath) => {
     const pluginConfig = pluginConfigs[path];
 
     const services = pluginConfig.services || {};
-    logger.info(`Initializing services for module ${pluginConfig.name}`)
+    logger.info(pluginConfig.name, `\tInitializing services for module ${pluginConfig.name}`)
     for (let serviceName in services) {
-      logger.info(`\t${serviceName}`);
+      logger.info(pluginConfig.name, `\t\tService name: ${serviceName}`);
       loadService(root, path, serviceName, services[serviceName]);
     }
   };
