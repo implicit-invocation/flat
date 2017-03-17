@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   name: "common",
   description: "Shared libraries",
   services: {

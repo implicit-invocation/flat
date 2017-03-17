@@ -70,7 +70,10 @@ export const load = (root, configFilePath) => {
   const pluginConfigs = {};
 
   pluginPaths.map(path => {
-    const pluginConfig = root.require(path);
+    let pluginConfig = root.require(path);
+    if (pluginConfig.default) {
+      pluginConfig = pluginConfig.default;
+    }
     pluginConfigs[path] = pluginConfig;
     logger.info(pluginConfig.name, `\tLoading module ${pluginConfig.name} at path ${path}`);
   });
