@@ -4,7 +4,7 @@ module.exports = {
   services: {
     "B.a": {
       module: './a.js',
-      async: true
+      async: true,
       require: ["timeout", "A.b"]
     }
   },
