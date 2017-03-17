@@ -95,7 +95,7 @@ export const load = (root, configFilePath) => {
     logger.info(pluginConfig.name, `\tInitializing services for module ${pluginConfig.name}`)
     for (let serviceName in services) {
       logger.info(pluginConfig.name, `\t\tService name: ${serviceName}`);
-      loadService(root, path, serviceName, services[serviceName]);
+      loadService(root, path, serviceName, services[serviceName]).catch(e => logger.error('Service Loader', `\tService ${serviceName} failed to load!`, e));
     }
   };
 };
