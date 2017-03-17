@@ -5,7 +5,8 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "babel src -s -D -d dist --presets es2015,stage-0",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "example": "babel-node example --presets es2015,stage-0"
   },
   "repository": {
     "type": "git",

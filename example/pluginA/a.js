@@ -1,3 +1,3 @@
-export default (winston, aFromB) {
+export default (winston, aFromB) => {
   winston.info(aFromB);
 }
