@@ -54,7 +54,7 @@ const loadService = async (root, path, serviceName, service) => {
 }
 
 export const load = (root, configFilePath) => {
-  const pluginPaths = root.require(pluginsDescriptionPath);
+  const pluginPaths = root.require(configFilePath);
 
   pluginPaths.map(path => {
     const pluginConfig = root.require(path);
