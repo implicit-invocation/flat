@@ -5,7 +5,7 @@ simple IoC for node.js
 
 ## Installation
 
-    $ npm install flat --save
+    $ npm install flat-ioc --save
 
 ## Usage
 
@@ -74,7 +74,7 @@ A JSON file or a node module that exports an array contains path to plugins' des
 ```
 ### Use it in your app
 ```Javascript
-var container = require('flat');
+var container = require('flat-ioc');
 
 container.load(module, './plugins.js');
 ```

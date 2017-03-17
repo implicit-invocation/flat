@@ -1,5 +1,5 @@
 {
-  "name": "flat",
+  "name": "flat-ioc",
   "version": "1.0.0",
   "description": "simple IOC for node.js",
   "main": "./dist/index.js",
