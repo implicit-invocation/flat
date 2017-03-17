@@ -61,7 +61,6 @@ module.exports = {
   },
   exports: ['com.example.module1.service2'] // Optional
 };
-
 ```
 
 ### Config file
@@ -74,6 +73,39 @@ A JSON file or a node module that exports an array contains path to plugins' des
   "./plugins/plugin2"
 ]
 
+```
+
+### Shorthands
+
+For `lib` dependencies, you can use `::` prefix
+```Javascript
+module.exports = {
+  ...
+  services: {
+    'com.example.module1.service1': {
+      /**
+       * equivalent to [{ lib: 'express' }, { lib:'winston' }]
+       */
+      require: [ '::express', '::winston' ]
+    }
+  }
+}
+```
+
+For service declaration
+```Javascript
+module.exports = {
+  ...
+  services: {
+    /**
+     * You can declare a service using this shorthand:
+     * `module_path << requirements << async`
+     * Async is set to false by default, if not specified.
+     * Requirements are comma separated.
+     */
+    'com.example.module1.service2': './service2 << ::winston, com.example.module2.serviceX << true'
+  }
+}
 ```
 ### Use it in your app
 ```Javascript

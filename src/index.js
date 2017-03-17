@@ -12,6 +12,23 @@ const addPendingDependencies = dependencies => {
 }
 
 const loadService = async(root, path, serviceName, service) => {
+  if (typeof service === 'string') {
+    // shorthand for service declaration
+    const frags = service.split('<<');
+    const moduleName = frags[0];
+    service = {
+      module: moduleName.trim()
+    }
+    if (frags.length >= 2) {
+      let depNames = frags[1].trim();
+      service.require = depNames.split(',').map(name => name.trim());
+    }
+    if (frags.length >= 3) {
+      const async = (frags[2].trim() == 'true');
+      service.async = async;
+    }
+  }
+  
   if (!service.func) {
     if (service.module) {
       service.func = root.require(`${path.replace(/\/$/, "")}/${service.module.replace(/^\//, "")}`);
@@ -27,7 +44,6 @@ const loadService = async(root, path, serviceName, service) => {
   if (!service.func || typeof service.func !== "function") {
     return;
   }
-
 
   const requirementPromises = [];
 
@@ -47,7 +63,7 @@ const loadService = async(root, path, serviceName, service) => {
         if (pendingDependencies[requirement]) {
           requirementPromises.push(pendingDependencies[requirement].promise);
         } else {
-          logger.error('Service Loader', `\tUnmet dependency: "${serviceName}" requires ${requirement} but ${requirement} cannot be found by the container.`);
+          logger.error('Service Loader', `\tUnmet dependency: "${serviceName}" requires "${requirement}" but "${requirement}" cannot be found by the container.`);
           return;
         }
       }
