@@ -1,3 +1,3 @@
-export default (winston, aFromB) => {
-  winston.info(aFromB);
+export default (logger, aFromB) => {
+  logger.info("pluginA::A.a", `\tString received: ${aFromB}`);
 }
