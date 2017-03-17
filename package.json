@@ -1,0 +1,41 @@
+{
+  "name": "flat",
+  "version": "1.0.0",
+  "description": "simple IOC for node.js",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "babel src -s -D -d dist --presets es2015,stage-0",
+    "prepublish": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/implicit-invocation/flat.git"
+  },
+  "keywords": [
+    "ioc",
+    "di"
+  ],
+  "author": {
+    "name": "Duong Dat",
+    "email": "dat@dongbat.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/implicit-invocation/flat/issues"
+  },
+  "homepage": "https://github.com/implicit-invocation/flat#readme",
+  "devDependencies": {
+    "babel-cli": "^6.9.0",
+    "babel-core": "^6.9.0",
+    "babel-plugin-transform-async-to-generator": "^6.22.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-stage-0": "^6.5.0"
+  },
+  "dependencies": {
+    "babel-runtime": "^6.23.0",
+    "bluebird": "^3.5.0",
+    "winston": "^2.3.1"
+  }
+}
