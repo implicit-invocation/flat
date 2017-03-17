@@ -30,7 +30,7 @@ module.exports = {
        * for npm dependencies and non-plugin modules) or another service from another plugin.
        */
       require: ['com.example.module2.serviceX' /* a service from another plugin */ , {
-        lib: 'winston' // project dependency
+        lib: 'winston' // project dependency, you can use shorthand ::winston
       }, {
         lib: './lib/some-lib' // module relative to main entry
       }],
@@ -48,6 +48,9 @@ module.exports = {
        * function.
        */
       module: './service2',
+      require: [
+        '::winston' // shorthand for {lib: 'winston'}
+      ]
       /**
        * If async is set to true, your factory function must return a promise
        * Other services that depend on this service will wait for the promise to

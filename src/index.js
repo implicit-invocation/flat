@@ -34,6 +34,12 @@ const loadService = async(root, path, serviceName, service) => {
   if (Array.isArray(service.require)) {
     const requirements = service.require;
     for (let requirement of requirements) {
+      if (typeof requirement === 'string' && requirement.startsWith('::')) {
+        // shorthand for requirement.lib
+        requirement = {
+          lib: requirement.substring(2)
+        };
+      }
       if (requirement.lib) {
         // node modules and modules that is local to root
         requirementPromises.push(Promise.resolve(root.require(requirement.lib)));

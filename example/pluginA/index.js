@@ -4,9 +4,7 @@ module.exports = {
   services: {
     'A.a': {
       module: './a.js',
-      require: [{
-        lib: 'winston'
-      }, 'B.a']
+      require: ['::winston', 'B.a']
     },
     'A.b': {
       module: './b.js',
