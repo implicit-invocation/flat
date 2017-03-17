@@ -1,4 +1,5 @@
 module.exports = [
-  "./plugins/pluginA",
-  "./plugins/pluginB"
+  "./pluginA",
+  "./pluginB",
+  "./common"
 ]

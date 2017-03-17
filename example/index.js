@@ -1,3 +1,3 @@
-import flat from '../src';
+import { load } from '../src';
 
-flat.load(module, './plugins.js');
+load(module, './plugins.js');
