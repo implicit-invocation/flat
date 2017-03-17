@@ -1,3 +1,9 @@
-import { load } from '../src';
+import * as Container from '../src';
 
-load(module, './plugins.js');
+Container.load(module, './plugins.js');
+
+Container.get('B.a').then(text => {
+  console.log("-------------------------------------------");
+  console.log(text);
+  console.log("-------------------------------------------");
+});

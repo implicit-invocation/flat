@@ -1,11 +1,11 @@
 module.exports = {
-  name: "pluginB",
-  description: "Plugin B",
+  name: 'pluginB',
+  description: 'Plugin B',
   services: {
-    "B.a": {
+    'B.a': {
       module: './a.js',
       async: true,
-      require: ["timeout", "A.b"]
+      require: ['timeout', 'A.b']
     }
   },
   exports: ['B.a']

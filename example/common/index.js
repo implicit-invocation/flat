@@ -1,8 +1,8 @@
 export default {
-  name: "common",
-  description: "Shared libraries",
+  name: 'common',
+  description: 'Shared libraries',
   services: {
-    "timeout": {
+    'timeout': {
       module: './timeout.js',
       require: [{
         lib: 'bluebird'

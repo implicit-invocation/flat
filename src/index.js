@@ -99,3 +99,7 @@ export const load = (root, configFilePath) => {
     }
   };
 };
+
+export const get = (name) => {
+  return pendingDependencies[name].promise;
+}

@@ -1,17 +1,25 @@
 module.exports = {
-  name: "pluginA",
-  description: "Plugin A",
+  name: 'pluginA',
+  description: 'Plugin A',
   services: {
-    "A.a": {
+    'A.a': {
       module: './a.js',
       require: [{
         lib: 'winston'
-      }, "B.a"]
+      }, 'B.a']
     },
-    "A.b": {
+    'A.b': {
       module: './b.js',
       async: true,
-      require: [ "timeout" ]
+      require: [ 'timeout' ]
+    },
+    'A.c': {
+      func: logger => {
+        logger.info('pluginA::A.c', '\tTest inline service');
+      },
+      require: [{
+        lib: 'winston'
+      }]
     }
   },
   exports: [ 'A.b' ]
