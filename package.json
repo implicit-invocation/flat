@@ -6,7 +6,6 @@
   "scripts": {
     "build": "babel src -s -D -d dist --presets es2015,stage-0",
     "prepublish": "npm run build",
-    "postinstall": "npm run build",
     "example": "babel-node example --presets es2015,stage-0"
   },
   "repository": {
