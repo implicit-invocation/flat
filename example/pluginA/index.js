@@ -10,7 +10,7 @@ module.exports = {
       },
       require: [{
         lib: 'winston'
-      }]
+      }, 'test']
     }
   },
   exports: [ 'A.b' ]

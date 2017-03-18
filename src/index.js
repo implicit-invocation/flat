@@ -1,9 +1,16 @@
 import Promise from 'bluebird';
 import logger from 'winston';
+import chalk from 'chalk';
+import {
+  table,
+  getBorderCharacters
+} from 'table';
 
 logger.cli();
 
+const loadedPlugins = {};
 const pendingDependencies = {};
+const registeredServices = {};
 
 const addPendingDependencies = dependencies => {
   for (let dependency of dependencies) {
@@ -28,7 +35,7 @@ const loadService = async(root, path, serviceName, service) => {
       service.async = async;
     }
   }
-  
+
   if (!service.func) {
     if (service.module) {
       service.func = root.require(`${path.replace(/\/$/, "")}/${service.module.replace(/^\//, "")}`);
@@ -46,6 +53,7 @@ const loadService = async(root, path, serviceName, service) => {
   }
 
   const requirementPromises = [];
+  registeredServices[serviceName].requirements = [];
 
   if (Array.isArray(service.require)) {
     const requirements = service.require;
@@ -56,6 +64,8 @@ const loadService = async(root, path, serviceName, service) => {
           lib: requirement.substring(2)
         };
       }
+      registeredServices[serviceName].requirements.push(requirement);
+
       if (requirement.lib) {
         // node modules and modules that is local to root
         requirementPromises.push(Promise.resolve(root.require(requirement.lib)));
@@ -63,6 +73,7 @@ const loadService = async(root, path, serviceName, service) => {
         if (pendingDependencies[requirement]) {
           requirementPromises.push(pendingDependencies[requirement].promise);
         } else {
+          registeredServices[serviceName].status = 'unresolvable';
           logger.error('Service Loader', `\tUnmet dependency: "${serviceName}" requires "${requirement}" but "${requirement}" cannot be found by the container.`);
           return;
         }
@@ -74,11 +85,15 @@ const loadService = async(root, path, serviceName, service) => {
 
   logger.info('Service Loader', `\tRequirements for service "${serviceName}" resolved.`);
 
+  registeredServices[serviceName].status = 'resolved';
+
   let result = service.func.apply({}, requirements);
 
   if (service.async) {
     result = await result;
   }
+
+  registeredServices[serviceName].status = 'ready';
 
   if (pendingDependencies[serviceName]) {
     pendingDependencies[serviceName].resolve(result);
@@ -86,7 +101,109 @@ const loadService = async(root, path, serviceName, service) => {
   }
 }
 
-export const load = (root, configFilePath) => {
+const getStatusString = status => {
+  switch (status) {
+    case 'pending':
+      return chalk.bgYellow.bold(status);
+    case 'resolved':
+    case 'ready':
+      return chalk.bgGreen.black.bold(status);
+    case 'error':
+    case 'unresolvable':
+      return chalk.bgRed.white.bold(status);
+  }
+}
+
+const getServiceNameString = dep => {
+  if (dep.lib) {
+    return chalk.bold.grey(`::${dep.lib}`);
+  }
+
+  if(!registeredServices[dep]) {
+    return chalk.red.bold(dep);
+  }
+
+  const status = registeredServices[dep].status;
+  switch (status) {
+    case 'pending':
+      return chalk.bgYellow.bold(dep);
+    case 'resolved':
+    case 'ready':
+      return chalk.bgGreen.black.bold(dep);
+    case 'error':
+    case 'unresolvable':
+      return chalk.bgRed.white.bold(dep);
+  }
+}
+
+const getServiceTable = services => {
+  const data = [
+    [
+      chalk.bold('Name'),
+      '',
+      chalk.bold('Requirements'),
+      chalk.bold('Status')
+    ]
+  ];
+
+  for (let serviceName of services) {
+    data.push([
+      serviceName, !!pendingDependencies[serviceName] ? chalk.green.bold('E') : '',
+      registeredServices[serviceName].requirements.map(dep => getServiceNameString(dep)).join(', '),
+      getStatusString(registeredServices[serviceName].status)
+    ]);
+  }
+
+  return table(data, {
+    border: getBorderCharacters('ramac'),
+    columns: {
+      0: {
+        width: 20
+      },
+      1: {
+        width: 1
+      },
+      2: {
+        width: 20
+      },
+      4: {
+        width: 20
+      }
+    }
+  });
+}
+
+const printTables = () => {
+  for (let pluginName in loadedPlugins) {
+    let pluginInfo = loadedPlugins[pluginName];
+    console.log(`# Plugin "${pluginName}" \tat path "${pluginInfo.path}"`);
+    let services = pluginInfo.services;
+    console.log(getServiceTable(services));
+  }
+}
+
+const enableKeyPress = () => {
+  const stdin = process.stdin;
+  stdin.setRawMode(true);
+  stdin.resume();
+  stdin.setEncoding('utf8');
+
+  stdin.on('data', function(key) {
+    if (key === '\u0003' || key === 'q') {
+      process.exit();
+    }
+
+    if (key === '`') {
+      printTables();
+      return;
+    }
+
+    process.stdout.write(key);
+  });
+
+}
+
+export const load = (root, configFilePath, interactive) => {
   const pluginPaths = root.require(configFilePath);
 
   const pluginConfigs = {};
@@ -98,11 +215,13 @@ export const load = (root, configFilePath) => {
     }
     pluginConfigs[path] = pluginConfig;
     logger.info(pluginConfig.name, `\tLoading module ${pluginConfig.name} at path ${path}`);
+    loadedPlugins[pluginConfig.name] = {
+      path
+    }
   });
 
   for (let path in pluginConfigs) {
     const pluginConfig = pluginConfigs[path];
-
 
     if (Array.isArray(pluginConfig.exports)) {
       logger.info(pluginConfig.name, `\tExporting services from module ${pluginConfig.name}: ${pluginConfig.exports.join(', ')}`);
@@ -112,14 +231,25 @@ export const load = (root, configFilePath) => {
 
   for (let path in pluginConfigs) {
     const pluginConfig = pluginConfigs[path];
-
+    loadedPlugins[pluginConfig.name].services = [];
     const services = pluginConfig.services || {};
     logger.info(pluginConfig.name, `\tInitializing services for module ${pluginConfig.name}`)
     for (let serviceName in services) {
       logger.info(pluginConfig.name, `\t\tService name: ${serviceName}`);
-      loadService(root, path, serviceName, services[serviceName]).catch(e => logger.error('Service Loader', `\tService ${serviceName} failed to load!`, e));
+      loadedPlugins[pluginConfig.name].services.push(serviceName);
+      registeredServices[serviceName] = {
+        status: 'pending'
+      };
+      loadService(root, path, serviceName, services[serviceName]).catch(e => {
+        registeredServices[serviceName].status = 'error';
+        logger.error('Service Loader', `\tService ${serviceName} failed to load!`, e)
+      });
     }
   };
+
+  if (interactive) {
+    enableKeyPress();
+  }
 };
 
 export const get = (name) => {
