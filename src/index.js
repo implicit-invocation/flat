@@ -53,7 +53,8 @@ const loadService = async(root, path, serviceName, service) => {
   }
 
   const requirementPromises = [];
-  registeredServices[serviceName].requirements = [];
+  const serviceDetail = registeredServices[serviceName];
+  serviceDetail.requirements = [];
 
   if (Array.isArray(service.require)) {
     const requirements = service.require;
@@ -64,7 +65,7 @@ const loadService = async(root, path, serviceName, service) => {
           lib: requirement.substring(2)
         };
       }
-      registeredServices[serviceName].requirements.push(requirement);
+      serviceDetail.requirements.push(requirement);
 
       if (requirement.lib) {
         // node modules and modules that is local to root
@@ -73,7 +74,7 @@ const loadService = async(root, path, serviceName, service) => {
         if (pendingDependencies[requirement]) {
           requirementPromises.push(pendingDependencies[requirement].promise);
         } else {
-          registeredServices[serviceName].status = 'unresolvable';
+          serviceDetail.status = 'unresolvable';
           logger.error('Service Loader', `\tUnmet dependency: "${serviceName}" requires "${requirement}" but "${requirement}" cannot be found by the container.`);
           return;
         }
@@ -85,7 +86,7 @@ const loadService = async(root, path, serviceName, service) => {
 
   logger.info('Service Loader', `\tRequirements for service "${serviceName}" resolved.`);
 
-  registeredServices[serviceName].status = 'resolved';
+  serviceDetail.status = 'resolved';
 
   let result = service.func.apply({}, requirements);
 
@@ -93,7 +94,7 @@ const loadService = async(root, path, serviceName, service) => {
     result = await result;
   }
 
-  registeredServices[serviceName].status = 'ready';
+  serviceDetail.status = 'ready';
 
   if (pendingDependencies[serviceName]) {
     pendingDependencies[serviceName].resolve(result);
@@ -107,10 +108,10 @@ const getStatusString = status => {
       return chalk.bgYellow.bold(status);
     case 'resolved':
     case 'ready':
-      return chalk.bgGreen.black.bold(status);
+      return chalk.bgGreen.bold(status);
     case 'error':
     case 'unresolvable':
-      return chalk.bgRed.white.bold(status);
+      return chalk.bgRed.bold(status);
   }
 }
 
@@ -126,13 +127,13 @@ const getServiceNameString = dep => {
   const status = registeredServices[dep].status;
   switch (status) {
     case 'pending':
-      return chalk.bgYellow.bold(dep);
+      return chalk.yellow.bold(dep);
     case 'resolved':
     case 'ready':
-      return chalk.bgGreen.black.bold(dep);
+      return chalk.green.bold(dep);
     case 'error':
     case 'unresolvable':
-      return chalk.bgRed.white.bold(dep);
+      return chalk.red.bold(dep);
   }
 }
 
