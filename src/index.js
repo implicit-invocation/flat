@@ -105,7 +105,7 @@ const loadService = async(root, path, serviceName, service) => {
 
 const getServiceString = dep => {
   if (dep.lib) {
-    return chalk.grey.bold(`::dep.lib`);
+    return chalk.grey.bold(`::${dep.lib}`);
   }
   if (!registeredServices[dep]) {
     return chalk.red.bold(dep);
@@ -115,8 +115,8 @@ const getServiceString = dep => {
 
   switch (status) {
     case 'pending':
-      return chalk.yellow.bold(dep);
     case 'resolved':
+      return chalk.yellow.bold(dep);
     case 'ready':
       return chalk.green.bold(dep);
     case 'error':
@@ -135,8 +135,8 @@ const padString = (string, length) => {
 const getStatusString = status => {
   switch (status) {
     case 'pending':
-      return chalk.bgYellow.bold(`${padString(status, 20)}`);
     case 'resolved':
+      return chalk.bgYellow.bold(`${padString(status, 20)}`);
     case 'ready':
       return chalk.bgGreen.bold(`${padString(status, 20)}`);
     case 'error':
@@ -191,7 +191,8 @@ const printTables = () => {
           width: 20
         },
         2: {
-          width: 20
+          width: 20,
+          wrapWord: true
         },
         3: {
           width: 20
@@ -228,7 +229,12 @@ Container.load = (root, configFilePath, interactive) => {
     }
   });
 
-  pendingDependencies['context'] = Promise.resolve(Container);
+  pendingDependencies['context'] = {
+    promise: Promise.resolve(Container)
+  };
+  registeredServices['context'] = {
+    status: 'ready'
+  }
 
   for (let path in pluginConfigs) {
     const pluginConfig = pluginConfigs[path];
@@ -265,6 +271,10 @@ Container.load = (root, configFilePath, interactive) => {
 
 Container.get = (name) => {
   return pendingDependencies[name].promise;
+}
+
+Container.getPluginDetails = () => {
+  return loadedPlugins;
 }
 
 module.exports = Container;

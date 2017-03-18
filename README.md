@@ -121,6 +121,33 @@ container.get('serviceName').then(function(service) {
   // do something with the service
 });
 ```
+### Monitoring
+You can enable interactive mode
+```Javascript
+container.load(module, './plugins.js', true);
+```
+After that, everytime you press enter, a nice table will appear
+![Table](table.png?raw=true "table")
+
+You can also get the plugin details by calling
+```Javascript
+container.getPluginDetails();
+```
+
+You can access the container from plugins by injecting the `context` service.
+```Javascript
+module.export = {
+  ...
+  services: {
+    'admin.pluginDetails': {
+      require: [ 'adminAPI', 'context', 'checkPerm' ],
+      func: (adminAPI, context, checkPerm) => {
+        adminAPI.get('/pluginDetails', checkPerm('plugins.monitor'), (req, res) => res.send(context.getPluginDetails()))
+      }
+    }
+  }
+}
+```
 
 ## TODO
 

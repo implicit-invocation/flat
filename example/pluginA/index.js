@@ -8,9 +8,7 @@ module.exports = {
       func: logger => {
         logger.info('pluginA::A.c', '\tTest inline service');
       },
-      require: [{
-        lib: 'winston'
-      }, 'test']
+      require: ['::winston', 'test']
     }
   },
   exports: [ 'A.b' ]

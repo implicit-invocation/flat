@@ -4,10 +4,13 @@ export default {
   services: {
     'timeout': {
       module: './timeout.js',
-      require: [{
-        lib: 'bluebird'
-      }]
+      require: ['::bluebird']
+    },
+    'neverFinish': {
+      require: ['::bluebird'],
+      async: true,
+      func: Promise => Promise.pending().promise
     }
   },
-  exports: [ 'timeout' ]
+  exports: [ 'timeout', 'neverFinish' ]
 };
