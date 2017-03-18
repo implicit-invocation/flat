@@ -1,6 +1,7 @@
 import Promise from 'bluebird';
 import logger from 'winston';
 import chalk from 'chalk';
+import readline from 'readline';
 import {
   table,
   getBorderCharacters
@@ -102,29 +103,16 @@ const loadService = async(root, path, serviceName, service) => {
   }
 }
 
-const getStatusString = status => {
-  switch (status) {
-    case 'pending':
-      return chalk.bgYellow.bold(status);
-    case 'resolved':
-    case 'ready':
-      return chalk.bgGreen.bold(status);
-    case 'error':
-    case 'unresolvable':
-      return chalk.bgRed.bold(status);
-  }
-}
-
-const getServiceNameString = dep => {
+const getServiceString = dep => {
   if (dep.lib) {
-    return chalk.bold.grey(`::${dep.lib}`);
+    return chalk.grey.bold(`::dep.lib`);
   }
-
-  if(!registeredServices[dep]) {
+  if (!registeredServices[dep]) {
     return chalk.red.bold(dep);
   }
 
   const status = registeredServices[dep].status;
+
   switch (status) {
     case 'pending':
       return chalk.yellow.bold(dep);
@@ -137,74 +125,93 @@ const getServiceNameString = dep => {
   }
 }
 
-const getServiceTable = services => {
-  const data = [
-    [
-      chalk.bold('Name'),
-      '',
-      chalk.bold('Requirements'),
-      chalk.bold('Status')
-    ]
-  ];
+const padString = (string, length) => {
+  while (string.length < length) {
+    string = ' ' + string;
+  }
+  return string;
+}
 
-  for (let serviceName of services) {
-    data.push([
-      serviceName, !!pendingDependencies[serviceName] ? chalk.green.bold('E') : '',
-      registeredServices[serviceName].requirements.map(dep => getServiceNameString(dep)).join(', '),
-      getStatusString(registeredServices[serviceName].status)
-    ]);
+const getStatusString = status => {
+  switch (status) {
+    case 'pending':
+      return chalk.bgYellow.bold(`${padString(status, 20)}`);
+    case 'resolved':
+    case 'ready':
+      return chalk.bgGreen.bold(`${padString(status, 20)}`);
+    case 'error':
+    case 'unresolvable':
+      return chalk.bgRed.bold(`${padString(status, 20)}`);
   }
 
-  return table(data, {
-    border: getBorderCharacters('ramac'),
-    columns: {
-      0: {
-        width: 20
-      },
-      1: {
-        width: 1
-      },
-      2: {
-        width: 20
-      },
-      4: {
-        width: 20
-      }
-    }
-  });
 }
 
 const printTables = () => {
   for (let pluginName in loadedPlugins) {
-    let pluginInfo = loadedPlugins[pluginName];
-    console.log(`# Plugin "${pluginName}" \tat path "${pluginInfo.path}"`);
-    let services = pluginInfo.services;
-    console.log(getServiceTable(services));
+    const pluginDetail = loadedPlugins[pluginName];
+    console.log(`Plugin "${chalk.bold(pluginName)}" @path "${chalk.bold(pluginDetail.path)}"`);
+
+    const services = pluginDetail.services;
+    const data = [
+      [
+        '',
+        chalk.bold('Name'),
+        chalk.bold('Requirements'),
+        chalk.bold('Status')
+      ]
+    ];
+
+    console.log();
+    for (let serviceName in services) {
+      const serviceDetail = services[serviceName];
+
+      let exportString;
+      if (serviceDetail.export) {
+        exportString = chalk.yellow('E');
+      } else {
+        exportString = chalk.grey('X');
+      }
+      let requirementString = '';
+      if (serviceDetail.requirements) {
+        requirementString = serviceDetail.requirements.map(dep => getServiceString(dep)).join(", ");
+      }
+
+      const statusString = getStatusString(serviceDetail.status);
+
+      data.push([exportString, serviceName, requirementString, statusString]);
+
+    }
+    console.log(table(data, {
+      border: getBorderCharacters('ramac'),
+      columns: {
+        0: {
+          width: 1
+        },
+        1: {
+          width: 20
+        },
+        2: {
+          width: 20
+        },
+        3: {
+          width: 20
+        }
+      }
+    }));
   }
 }
 
 const enableKeyPress = () => {
-  const stdin = process.stdin;
-  stdin.setRawMode(true);
-  stdin.resume();
-  stdin.setEncoding('utf8');
-
-  stdin.on('data', function(key) {
-    if (key === '\u0003' || key === 'q') {
-      process.exit();
-    }
-
-    if (key === '`') {
-      printTables();
-      return;
-    }
-
-    process.stdout.write(key);
+  const rl = readline.createInterface({
+    input: process.stdin
   });
 
+  rl.on('line', () => printTables());
 }
 
-export const load = (root, configFilePath, interactive) => {
+const Container = {};
+
+Container.load = (root, configFilePath, interactive) => {
   const pluginPaths = root.require(configFilePath);
 
   const pluginConfigs = {};
@@ -221,6 +228,8 @@ export const load = (root, configFilePath, interactive) => {
     }
   });
 
+  pendingDependencies['context'] = Promise.resolve(Container);
+
   for (let path in pluginConfigs) {
     const pluginConfig = pluginConfigs[path];
 
@@ -232,15 +241,16 @@ export const load = (root, configFilePath, interactive) => {
 
   for (let path in pluginConfigs) {
     const pluginConfig = pluginConfigs[path];
-    loadedPlugins[pluginConfig.name].services = [];
+    loadedPlugins[pluginConfig.name].services = {};
     const services = pluginConfig.services || {};
     logger.info(pluginConfig.name, `\tInitializing services for module ${pluginConfig.name}`)
     for (let serviceName in services) {
       logger.info(pluginConfig.name, `\t\tService name: ${serviceName}`);
-      loadedPlugins[pluginConfig.name].services.push(serviceName);
-      registeredServices[serviceName] = {
-        status: 'pending'
+      const serviceDetail = registeredServices[serviceName] = {
+        status: 'pending',
+        export: !!pendingDependencies[serviceName]
       };
+      loadedPlugins[pluginConfig.name].services[serviceName] = serviceDetail;
       loadService(root, path, serviceName, services[serviceName]).catch(e => {
         registeredServices[serviceName].status = 'error';
         logger.error('Service Loader', `\tService ${serviceName} failed to load!`, e)
@@ -253,6 +263,8 @@ export const load = (root, configFilePath, interactive) => {
   }
 };
 
-export const get = (name) => {
+Container.get = (name) => {
   return pendingDependencies[name].promise;
 }
+
+module.exports = Container;
