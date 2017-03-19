@@ -2,10 +2,7 @@ import Promise from 'bluebird';
 import logger from 'winston';
 import chalk from 'chalk';
 import readline from 'readline';
-import {
-  table,
-  getBorderCharacters
-} from 'table';
+import { table, getBorderCharacters } from 'table';
 
 logger.cli();
 
@@ -14,7 +11,7 @@ const pendingDependencies = {};
 const registeredServices = {};
 
 const addPendingDependencies = dependencies => {
-  for (let dependency of dependencies) {
+  for ( let dependency of dependencies ) {
     pendingDependencies[dependency] = Promise.pending();
   }
 }
@@ -59,7 +56,7 @@ const loadService = async(root, path, serviceName, service) => {
 
   if (Array.isArray(service.require)) {
     const requirements = service.require;
-    for (let requirement of requirements) {
+    for ( let requirement of requirements ) {
       if (typeof requirement === 'string' && requirement.startsWith('::')) {
         // shorthand for requirement.lib
         requirement = {
@@ -114,14 +111,14 @@ const getServiceString = dep => {
   const status = registeredServices[dep].status;
 
   switch (status) {
-    case 'pending':
-    case 'resolved':
-      return chalk.yellow.bold(dep);
-    case 'ready':
-      return chalk.green.bold(dep);
-    case 'error':
-    case 'unresolvable':
-      return chalk.red.bold(dep);
+  case 'pending':
+  case 'resolved':
+    return chalk.yellow.bold(dep);
+  case 'ready':
+    return chalk.green.bold(dep);
+  case 'error':
+  case 'unresolvable':
+    return chalk.red.bold(dep);
   }
 }
 
@@ -134,14 +131,14 @@ const padString = (string, length) => {
 
 const getStatusString = status => {
   switch (status) {
-    case 'pending':
-    case 'resolved':
-      return chalk.bgYellow.bold(`${padString(status, 20)}`);
-    case 'ready':
-      return chalk.bgGreen.bold(`${padString(status, 20)}`);
-    case 'error':
-    case 'unresolvable':
-      return chalk.bgRed.bold(`${padString(status, 20)}`);
+  case 'pending':
+  case 'resolved':
+    return chalk.bgYellow.bold(`${padString(status, 20)}`);
+  case 'ready':
+    return chalk.bgGreen.bold(`${padString(status, 20)}`);
+  case 'error':
+  case 'unresolvable':
+    return chalk.bgRed.bold(`${padString(status, 20)}`);
   }
 
 }
@@ -243,7 +240,8 @@ Container.load = (root, configFilePath, interactive) => {
       logger.info(pluginConfig.name, `\tExporting services from module ${pluginConfig.name}: ${pluginConfig.exports.join(', ')}`);
       addPendingDependencies(pluginConfig.exports);
     }
-  };
+  }
+  ;
 
   for (let path in pluginConfigs) {
     const pluginConfig = pluginConfigs[path];
@@ -259,10 +257,12 @@ Container.load = (root, configFilePath, interactive) => {
       loadedPlugins[pluginConfig.name].services[serviceName] = serviceDetail;
       loadService(root, path, serviceName, services[serviceName]).catch(e => {
         registeredServices[serviceName].status = 'error';
+        registeredServices[serviceName].error = e;
         logger.error('Service Loader', `\tService ${serviceName} failed to load!`, e)
       });
     }
-  };
+  }
+  ;
 
   if (interactive) {
     enableKeyPress();
