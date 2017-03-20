@@ -1,13 +1,8 @@
 import Plugin from './plugin';
+import printTables from './print-tables';
 
 import Promise from 'bluebird';
 import winston from 'winston';
-import chalk from 'chalk';
-import readline from 'readline';
-import {
-  table,
-  getBorderCharacters
-} from 'table';
 
 const CONTAINER_DEFAULT_CONFIG = {
   interactive: true,
@@ -34,6 +29,14 @@ class Container {
     this.publicServices = {};
     const pluginPaths = root.require(configFilePath);
     this.loadPluginConfigs(pluginPaths);
+
+    if (configs.interactive) {
+      this.enableKeyPress();
+    }
+  }
+
+  enableKeyPress() {
+    process.stdin.on('data', () => printTables(this));
   }
 
   getLogger() {

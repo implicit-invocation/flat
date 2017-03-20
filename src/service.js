@@ -1,5 +1,4 @@
 import Promise from 'bluebird';
-import path from 'path';
 
 const prepareConfig = config => {
   if (typeof config === 'string') {
