@@ -1,9 +1,12 @@
-import * as Container from '../src';
+import Container from '../src';
 
-Container.load(module, './plugins.js', true);
+const container = new Container(module, './plugins.js', {
+  loggingLevel: 'verbose'
+});
 
-Container.get('B.a').then(text => {
-  console.log("-------------------------------------------");
+container.get('B.a').then(text => {
+  console.log("===========================================");
+  console.log("Lookup from outside plugins");
   console.log(text);
-  console.log("-------------------------------------------");
+  console.log("===========================================");
 });
