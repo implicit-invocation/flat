@@ -26,6 +26,7 @@ class Container {
     this.logger = logger;
     this.root = root;
     this.plugins = {};
+    this.errors = [];
     this.publicServices = {};
     const pluginPaths = root.require(configFilePath);
     this.loadPluginConfigs(pluginPaths);
@@ -33,6 +34,14 @@ class Container {
     if (configs.interactive) {
       this.enableKeyPress();
     }
+  }
+
+  reportError(service, error) {
+    this.errors.push({
+      serviceName: service.name,
+      status: service.status,
+      error
+    });
   }
 
   enableKeyPress() {
@@ -63,7 +72,11 @@ class Container {
 
     this.logger.info("flat-ioc", `\tDone loading plugins. Trying to resolve services.`);
 
-    for (var name in this.plugins) {
+    this.publicServices['context'] = {
+      promise: Promise.resolve(this)
+    }
+
+    for (let name in this.plugins) {
       this.plugins[name].resolveServices();
     }
   }
@@ -80,6 +93,17 @@ class Container {
       return true;
     }
     return false;
+  }
+
+  getInfo() {
+    const info = {};
+    for (let pluginName in this.plugins) {
+      info[pluginName] = this.plugins[pluginName].getInfo();
+    }
+    return {
+      plugins: info,
+      errors: this.errors
+    };
   }
 }
 

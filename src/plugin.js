@@ -25,6 +25,7 @@ export default class Plugin {
     this.logger.info(this.name, `\t\tRegistering public services`);
     exportNames.map(name => {
       if (this.services[name]) {
+        this.services[name].export = true;
         this.container.registerService(name, this.services[name]);
       }
       this.logger.verbose(this.name, `\t\t\tService name: ${name}`);
@@ -37,6 +38,7 @@ export default class Plugin {
       service.resolve().catch(e => {
         service.status = 'error';
         service.error = e;
+        this.container.reportError(service, e);
         this.logger.error(this.name, `\t\tFailed to resolve service ${name}`, e);
       });
     }
@@ -54,5 +56,19 @@ export default class Plugin {
       return this.services[name].promise;
     }
     return Promise.resolve(null);
+  }
+
+  getInfo() {
+    const info = {
+      name: this.name,
+      description: this.description,
+      path: this.path,
+      services: {}
+    };
+    for (let serviceName in this.services) {
+      const service = this.services[serviceName];
+      info.services[serviceName] = service.getInfo();
+    }
+    return info;
   }
 }

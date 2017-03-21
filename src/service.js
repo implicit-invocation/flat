@@ -59,6 +59,7 @@ export default class Service {
     if (!service.func || typeof service.func !== "function") {
       logger.error(plugin.name, `\t\tCannot find factory function for service ${this.name}`);
       this.status = "unresolvable";
+      container.reportError(this);
       return;
     }
 
@@ -81,6 +82,7 @@ export default class Service {
           } catch (e) {
             logger.error(plugin.name, `\t\tUnmet dependency: "${this.name}" requires node module: "${requirement.lib}"`);
             this.status = "unresolvable";
+            container.reportError(this);
             return;
           }
         } else if (plugin.has(requirement)) {
@@ -90,6 +92,7 @@ export default class Service {
         } else {
           logger.error(plugin.name, `\t\tUnmet dependency: "${this.name}" requires "${requirement}" but "${requirement}" cannot be found by the container.`);
           this.status = "unresolvable";
+          container.reportError(this);
           return;
         }
       }
@@ -109,5 +112,43 @@ export default class Service {
     this.pending.resolve(result);
     logger.verbose(plugin.name, `\tService "${this.name}" resolved.`);
     this.status = 'ready';
+  }
+
+  getInfo() {
+    const info = {
+      name: this.name,
+      export: this.export,
+      status: this.status,
+      error: this.error,
+      requirements: []
+    }
+    if (Array.isArray(this.config.require)) {
+      this.config.require.map(dep => {
+        let requirement;
+        if (dep.lib) {
+          requirement = {
+            dep: `::${dep.lib}`,
+            status: 'lib'
+          }
+        } else {
+          requirement = {
+            dep: dep
+          }
+          if (dep.startsWith('::')) {
+            requirement.status = 'lib';
+          } else {
+            if (this.container.has(dep)) {
+              requirement.status = this.container.publicServices[dep].status;
+            } else if (this.plugin.has(dep)) {
+              requirement.status = this.plugin.services[dep].status;
+            } else {
+              requirement.status = 'missing';
+            }
+          }
+        }
+        info.requirements.push(requirement);
+      });
+    }
+    return info;
   }
 }

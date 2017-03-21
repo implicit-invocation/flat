@@ -4,22 +4,13 @@ import {
   getBorderCharacters
 } from 'table';
 
-const getServiceString = (container, plugin, dep) => {
-  if (typeof dep === 'string' && dep.startsWith('::')) {
-    return chalk.grey.bold(dep);
-  }
-  if (dep.lib) {
-    return chalk.grey.bold(`::${dep.lib}`);
-  }
-  let status;
-  if (container.has(dep)) {
-    status = container.publicServices[dep].status;
-  } else if (plugin.has(dep)) {
-    status = plugin.services[dep].status;
-  } else {
-    return chalk.red.bold(dep);
-  }
+const getServiceString = (dep) => {
+  const status = dep.status;
+  dep = dep.dep;
+
   switch (status) {
+    case 'lib':
+      return chalk.grey.bold(dep);
     case 'pending':
     case 'resolved':
       return chalk.yellow.bold(dep);
@@ -27,6 +18,7 @@ const getServiceString = (container, plugin, dep) => {
       return chalk.green.bold(dep);
     case 'error':
     case 'unresolvable':
+    case 'missing':
       return chalk.red.bold(dep);
   }
 }
@@ -37,7 +29,6 @@ const padString = (string, length) => {
   }
   return string;
 }
-
 
 const getStatusString = status => {
   switch (status) {
@@ -53,7 +44,9 @@ const getStatusString = status => {
 }
 
 export default container => {
-  const plugins = container.plugins;
+  const containerInfo = container.getInfo();
+
+  const plugins = containerInfo.plugins;
   for (let pluginName in plugins) {
     const plugin = plugins[pluginName];
     console.log(`Plugin "${chalk.bold(pluginName)}" @path "${chalk.bold(plugin.path)}"`);
@@ -70,14 +63,14 @@ export default container => {
     for (let serviceName in services) {
       const service = services[serviceName];
       let exportString;
-      if (container.has(serviceName)) {
+      if (service.export) {
         exportString = chalk.yellow('E');
       } else {
         exportString = chalk.grey('X');
       }
       let requirementString = '';
       if (service.requirements) {
-        requirementString = service.requirements.map(dep => getServiceString(container, plugin, dep)).join(", ");
+        requirementString = service.requirements.map(dep => getServiceString(dep)).join(", ");
       }
 
       const statusString = getStatusString(service.status);
@@ -101,6 +94,39 @@ export default container => {
         }
       }
     }));
-
   }
+  if (!containerInfo.errors.length) {
+    return;
+  }
+  console.log(chalk.bold.red(`Problem found: ${containerInfo.errors.length}`));
+
+  const errorData = [
+    [
+      chalk.bold('Service Name'),
+      chalk.bold('Status'),
+      chalk.bold('Error')
+    ]
+  ];
+  for (let error of containerInfo.errors) {
+    errorData.push([
+      error.serviceName,
+      getStatusString(error.status),
+      error.error? error.error.message: ''
+    ])
+  }
+  console.log(table(errorData, {
+    border: getBorderCharacters('ramac'),
+    columns: {
+      0: {
+        width: 21
+      },
+      1: {
+        width: 20
+      },
+      2: {
+        width: 20,
+        wrapWord: true
+      }
+    }
+  }));
 }
