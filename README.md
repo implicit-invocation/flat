@@ -27,7 +27,7 @@ The configuration file can be a JSON file
 
 ```JSON
 [
-  "path_to_plugin1",
+    "path_to_plugin1",
     "path_to_plugin2",
     "path_to_plugin3",
     "path_to_plugin4"
@@ -39,7 +39,7 @@ Or a node module file that exports an array of paths
 ```Javascript
 module.exports = [
   // common
-  'path_to_plugin1',
+    'path_to_plugin1',
     'path_to_plugin2',
     
     // features
@@ -59,7 +59,7 @@ module.exports = {
   name: 'your plugin name', // plugins without a name will be ignored
     description: 'your plugin description', // optional
     services: {
-      'service-name-1': <service-description-1>,
+        'service-name-1': <service-description-1>,
         'service-name-2': <service-description-2>,
         ...
     },
