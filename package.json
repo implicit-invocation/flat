@@ -1,6 +1,6 @@
 {
   "name": "flat-ioc",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "simple IOC for node.js",
   "main": "./dist/index.js",
   "scripts": {
