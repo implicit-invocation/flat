@@ -2,7 +2,7 @@ module.exports = {
   name: 'pluginA',
   description: 'Plugin A',
   services: {
-    'A.a': './a.js << ::winston, B.a, A.string',
+    'A.a': './a.js << ::winston, B.a',
     'A.b': './b.js << timeout << true',
     'A.d': 'd',
     'A.string': {
