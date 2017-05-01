@@ -12,7 +12,7 @@ module.exports = {
       func: logger => {
         logger.info('pluginA::A.c', '\tTest inline service');
       },
-      require: ['::winston', 'test']
+      require: '::winston, test'
     }
   },
   exports: [ 'A.b' ]

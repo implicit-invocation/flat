@@ -69,6 +69,14 @@ export default class Service {
 
     const requirementPromises = [];
 
+    if (
+      typeof service.require === 'string' || service.require instanceof String
+    ) {
+      let reqs = service.require.split(',');
+      reqs = reqs.map(req => req.trim());
+      service.require = reqs;
+    }
+
     if (Array.isArray(service.require)) {
       const requirements = service.require;
       for (let requirement of requirements) {
