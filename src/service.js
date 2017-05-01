@@ -25,6 +25,10 @@ export default class Service {
   constructor(container, plugin, name, config) {
     this.container = container;
     this.plugin = plugin;
+    if (typeof name === 'string' && name.startsWith('&')) {
+      this.delayed = true;
+      name = name.substring(1);
+    }
     this.name = name;
     config = prepareConfig(config);
     this.requirements = config.require;
@@ -124,15 +128,25 @@ export default class Service {
       `\t\tRequirements for service "${this.name}" resolved.`
     );
 
-    let result = service.func.apply({}, requirements);
+    if (this.delayed || this.config.delayed) {
+      let result = {};
 
-    if (service.async) {
-      result = await result;
+      this.pending.resolve(result);
+      logger.verbose(plugin.name, `\tService "${this.name}" resolved.`);
+      this.status = 'ready';
+
+      service.func.apply({}, [result, ...requirements]);
+    } else {
+      let result = service.func.apply({}, requirements);
+
+      if (service.async) {
+        result = await result;
+      }
+
+      this.pending.resolve(result);
+      logger.verbose(plugin.name, `\tService "${this.name}" resolved.`);
+      this.status = 'ready';
     }
-
-    this.pending.resolve(result);
-    logger.verbose(plugin.name, `\tService "${this.name}" resolved.`);
-    this.status = 'ready';
   }
 
   getInfo() {
