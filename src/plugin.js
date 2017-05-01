@@ -39,7 +39,11 @@ export default class Plugin {
         service.status = 'error';
         service.error = e;
         this.container.reportError(service, e);
-        this.logger.error(this.name, `\t\tFailed to resolve service ${name}`, e);
+        this.logger.error(
+          this.name,
+          `\t\tFailed to resolve service ${name}`,
+          e
+        );
       });
     }
   }

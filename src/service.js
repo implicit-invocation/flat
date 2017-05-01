@@ -13,13 +13,13 @@ const prepareConfig = config => {
       ret.require = depNames.split(',').map(name => name.trim());
     }
     if (frags.length >= 3) {
-      const async = (frags[2].trim() == 'true');
+      const async = frags[2].trim() == 'true';
       ret.async = async;
     }
     return ret;
   }
   return config;
-}
+};
 
 export default class Service {
   constructor(container, plugin, name, config) {
@@ -31,7 +31,7 @@ export default class Service {
     this.config = config;
     this.pending = Promise.pending();
     this.promise = this.pending.promise;
-    this.status = "pending";
+    this.status = 'pending';
   }
 
   async resolve() {
@@ -44,7 +44,9 @@ export default class Service {
     if (!service.func) {
       if (service.module) {
         try {
-          service.func = root.require(`${plugin.path.replace(/\/$/, "")}/${service.module.replace(/^\//, "")}`);
+          service.func = root.require(
+            `${plugin.path.replace(/\/$/, '')}/${service.module.replace(/^\//, '')}`
+          );
           if (service.func.default) {
             // ES6 export default
             service.func = service.func.default;
@@ -52,13 +54,15 @@ export default class Service {
         } catch (e) {
           service.func = null;
         }
-
       }
     }
 
-    if (!service.func || typeof service.func !== "function") {
-      logger.error(plugin.name, `\t\tCannot find factory function for service ${this.name}`);
-      this.status = "unresolvable";
+    if (!service.func || typeof service.func !== 'function') {
+      logger.error(
+        plugin.name,
+        `\t\tCannot find factory function for service ${this.name}`
+      );
+      this.status = 'unresolvable';
       container.reportError(this);
       return;
     }
@@ -80,8 +84,11 @@ export default class Service {
             const mod = root.require(requirement.lib);
             requirementPromises.push(Promise.resolve(mod));
           } catch (e) {
-            logger.error(plugin.name, `\t\tUnmet dependency: "${this.name}" requires node module: "${requirement.lib}"`);
-            this.status = "unresolvable";
+            logger.error(
+              plugin.name,
+              `\t\tUnmet dependency: "${this.name}" requires node module: "${requirement.lib}"`
+            );
+            this.status = 'unresolvable';
             container.reportError(this);
             return;
           }
@@ -90,8 +97,11 @@ export default class Service {
         } else if (container.has(requirement)) {
           requirementPromises.push(container.get(requirement));
         } else {
-          logger.error(plugin.name, `\t\tUnmet dependency: "${this.name}" requires "${requirement}" but "${requirement}" cannot be found by the container.`);
-          this.status = "unresolvable";
+          logger.error(
+            plugin.name,
+            `\t\tUnmet dependency: "${this.name}" requires "${requirement}" but "${requirement}" cannot be found by the container.`
+          );
+          this.status = 'unresolvable';
           container.reportError(this);
           return;
         }
@@ -101,7 +111,10 @@ export default class Service {
     const requirements = await Promise.all(requirementPromises);
     this.status = 'resolved';
 
-    logger.verbose(plugin.name, `\t\tRequirements for service "${this.name}" resolved.`)
+    logger.verbose(
+      plugin.name,
+      `\t\tRequirements for service "${this.name}" resolved.`
+    );
 
     let result = service.func.apply({}, requirements);
 
@@ -121,7 +134,7 @@ export default class Service {
       status: this.status,
       error: this.error,
       requirements: []
-    }
+    };
     if (Array.isArray(this.config.require)) {
       this.config.require.map(dep => {
         let requirement;
@@ -129,11 +142,11 @@ export default class Service {
           requirement = {
             dep: `::${dep.lib}`,
             status: 'lib'
-          }
+          };
         } else {
           requirement = {
             dep: dep
-          }
+          };
           if (dep.startsWith('::')) {
             requirement.status = 'lib';
           } else {

@@ -6,12 +6,13 @@ import winston from 'winston';
 
 const CONTAINER_DEFAULT_CONFIG = {
   interactive: true,
-  loggingLevel: "info"
+  loggingLevel: 'info'
 };
 
 class Container {
   constructor(root, configFilePath, configs) {
-    configs = {...CONTAINER_DEFAULT_CONFIG,
+    configs = {
+      ...CONTAINER_DEFAULT_CONFIG,
       ...configs
     };
     const logger = new winston.Logger({
@@ -66,15 +67,21 @@ class Container {
       if (!config || !config.name) {
         return;
       }
-      this.logger.info("flat-ioc", `\tLoading plugin ${config.name} @path ${path}`);
+      this.logger.info(
+        'flat-ioc',
+        `\tLoading plugin ${config.name} @path ${path}`
+      );
       this.plugins[config.name] = new Plugin(this, path, config);
     });
 
-    this.logger.info("flat-ioc", `\tDone loading plugins. Trying to resolve services.`);
+    this.logger.info(
+      'flat-ioc',
+      `\tDone loading plugins. Trying to resolve services.`
+    );
 
     this.publicServices['context'] = {
       promise: Promise.resolve(this)
-    }
+    };
 
     for (let name in this.plugins) {
       this.plugins[name].resolveServices();
@@ -83,7 +90,7 @@ class Container {
 
   get(name) {
     if (this.publicServices[name]) {
-      return this.publicServices[name].promise
+      return this.publicServices[name].promise;
     }
     return Promise.resolve(null);
   }
