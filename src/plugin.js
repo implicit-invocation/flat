@@ -17,8 +17,8 @@ export default class Plugin {
     for (let name in services) {
       const serviceConfig = services[name];
       const service = new Service(this.container, this, name, serviceConfig);
-      this.services[name] = service;
-      this.logger.verbose(this.name, `\t\t\tService name: ${name}`);
+      this.services[service.name] = service;
+      this.logger.verbose(this.name, `\t\t\tService name: ${service.name}`);
     }
   }
   exportServices(exportNames) {
