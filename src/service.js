@@ -135,7 +135,7 @@ export default class Service {
       logger.verbose(plugin.name, `\tService "${this.name}" resolved.`);
       this.status = 'ready';
 
-      service.func.apply({}, [result, ...requirements]);
+      service.func.apply(result, [result, ...requirements]);
     } else {
       let result = service.func.apply({}, requirements);
 
