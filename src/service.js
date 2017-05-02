@@ -141,9 +141,7 @@ export default class Service {
         };
       } else {
         handler.get = (target, prop) => {
-          return (...args) => {
-            return realResult[prop].apply(realResult, args);
-          };
+          return realResult[prop];
         };
       }
     } else {
