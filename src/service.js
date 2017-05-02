@@ -120,23 +120,40 @@ export default class Service {
       }
     }
 
-    const requirements = await Promise.all(requirementPromises);
-    this.status = 'resolved';
-
-    logger.verbose(
-      plugin.name,
-      `\t\tRequirements for service "${this.name}" resolved.`
-    );
-
     if (this.delayed || this.config.delayed) {
-      let result = {};
+      let handler = {};
+      let proxy = new Proxy({}, handler);
 
-      this.pending.resolve(result);
+      this.pending.resolve(proxy);
       logger.verbose(plugin.name, `\tService "${this.name}" resolved.`);
       this.status = 'ready';
 
-      service.func.apply(result, [result, ...requirements]);
+      const requirements = await Promise.all(requirementPromises);
+      let realResult = service.func.apply({}, requirements);
+
+      if (service.async) {
+        handler.get = (target, prop) => {
+          return async (...args) => {
+            let resolvedResult = await realResult;
+            let res = resolvedResult[prop].apply(resolvedResult, args);
+            return await Promise.resolve(res);
+          };
+        };
+      } else {
+        handler.get = (target, prop) => {
+          return (...args) => {
+            return realResult[prop].apply(realResult, args);
+          };
+        };
+      }
     } else {
+      const requirements = await Promise.all(requirementPromises);
+      this.status = 'resolved';
+
+      logger.verbose(
+        plugin.name,
+        `\t\tRequirements for service "${this.name}" resolved.`
+      );
       let result = service.func.apply({}, requirements);
 
       if (service.async) {
