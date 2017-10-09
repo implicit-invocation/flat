@@ -31,9 +31,9 @@ const getStatusString = status => {
   switch (status) {
     case 'pending':
     case 'resolved':
-      return chalk.bgYellow.bold(`${padString(status, 20)}`);
+      return chalk.yellow.bold(`${padString(status, 20)}`);
     case 'ready':
-      return chalk.bgGreen.bold(`${padString(status, 20)}`);
+      return chalk.green.bold(`${padString(status, 20)}`);
     case 'error':
     case 'unresolvable':
       return chalk.bgRed.bold(`${padString(status, 20)}`);
